@@ -28,6 +28,7 @@ class Minio {
     this.sessionToken,
     this.region,
     this.enableTrace = false,
+    this.forceVirtualHostStyle = false,
   }) : port = port ?? implyPort(useSSL) {
     if (!isValidEndpoint(endPoint)) {
       throw MinioInvalidEndpointError(
@@ -80,6 +81,9 @@ class Minio {
 
   /// Set this value to enable tracing. (Optional)
   final bool enableTrace;
+
+  /// Set this value to override virtual host style. (Optional)
+  final bool forceVirtualHostStyle;
 
   late MinioClient _client;
   final _regionMap = <String?, String>{};
