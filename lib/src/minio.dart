@@ -29,6 +29,7 @@ class Minio {
     this.region,
     this.enableTrace = false,
     this.forceVirtualHostStyle = false,
+    this.getServerTime,
   }) : port = port ?? implyPort(useSSL) {
     if (!isValidEndpoint(endPoint)) {
       throw MinioInvalidEndpointError(
@@ -85,8 +86,20 @@ class Minio {
   /// Set this value to override virtual host style. (Optional)
   final bool forceVirtualHostStyle;
 
+  /// get time from server
+  final Future<DateTime?> Function()? getServerTime;
+
   late MinioClient _client;
   final _regionMap = <String?, String>{};
+
+  /// first get server time to avoid local time is not in sync with server time
+  Future<DateTime> getCurrentTime() async {
+    DateTime? serverTime;
+    if (getServerTime != null) {
+      serverTime = await getServerTime!();
+    }
+    return (serverTime ?? DateTime.now()).toUtc();
+  }
 
   /// Checks if a bucket exists.
   ///
@@ -809,13 +822,13 @@ class Minio {
     }
 
     final region = await getBucketRegion(postPolicy.formData['bucket']!);
-    var date = DateTime.now().toUtc();
+    var date = await getCurrentTime();
     var dateStr = makeDateLong(date);
 
     if (postPolicy.policy['expiration'] == null) {
       // 'expiration' is mandatory field for S3.
       // Set default expiration date of 7 days.
-      var expires = DateTime.now().toUtc();
+      var expires = await getCurrentTime();
       expires.add(const Duration(days: 7));
       postPolicy.setExpires(expires);
     }
@@ -906,7 +919,7 @@ class Minio {
 
     expires ??= expires = 24 * 60 * 60 * 7; // 7 days in seconds
     reqParams ??= {};
-    requestDate ??= DateTime.now().toUtc();
+    requestDate ??= await getCurrentTime();
 
     final region = await getBucketRegion(bucket);
     final request = _client.getBaseRequest(

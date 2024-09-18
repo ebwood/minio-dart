@@ -157,7 +157,7 @@ class MinioClient {
     );
     request.body = payload;
 
-    final date = DateTime.now().toUtc();
+    final date = await minio.getCurrentTime();
     final sha256sum = enableSHA256 ? sha256Hex(payload) : 'UNSIGNED-PAYLOAD';
     request.headers.addAll({
       'user-agent': userAgent,
