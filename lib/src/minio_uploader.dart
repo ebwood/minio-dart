@@ -57,6 +57,10 @@ class MinioUploader implements StreamConsumer<Uint8List> {
         headers['Content-MD5'] = base64.encode(md5digest);
       }
 
+      if (minio.sessionToken != null) {
+        headers['x-amz-security-token'] = minio.sessionToken!; // add this line
+      }
+
       if (_partNumber == 1 && chunk.length < partSize) {
         _etag = await _uploadChunk(chunk, headers, null);
         return;
